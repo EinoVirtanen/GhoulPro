@@ -2,16 +2,29 @@ bank_x_offset = 3
 bank_y_offset = 25
 ghouls_x_offset = 90
 ghouls_y_offset = 245
-canifis_x_offset = 40
+canifis_x_offset = 50
 canifis_y_offset = 180
 xp_per_run = 4751175 - 4746545 
 runs = 0
 
+import smtplib
 import autopy
 from random import uniform, randint
 from time import sleep
 bank_icon = autopy.bitmap.Bitmap.open("bank_icon.png")
 bank_coordinates = []
+
+def send_mail():
+    file_descriptor = open("credentials.txt", "r")
+    file_data = file_descriptor.read().split("\n")
+    file_descriptor.close()
+    address = file_data[0]
+    password = file_data[1]
+    mail_server = smtplib.SMTP('smtp.gmail.com', 587)
+    mail_server.starttls()
+    mail_server.login(address, password)
+    mail_server.sendmail(address, address, "RS3")
+    mail_server.quit()
 
 def wait(amount, reason):
     for i in range(amount):
@@ -27,6 +40,7 @@ def click_bank():
 
     if len(bank_coordinates) != 1:
         print "Successful runs", runs, "and about", runs * xp_per_run, "XP gained"
+        send_mail()
         quit("Error: " + str(len(bank_coordinates)) + " bank icons detected")
 
     autopy.mouse.smooth_move(bank_coordinates[0][0] + bank_x_offset + randint(-2, 2),
@@ -43,6 +57,7 @@ def click_ghouls():
 
     if len(bank_coordinates) != 1:
         print "Successful runs", runs, "and about", runs * xp_per_run, "XP gained"
+        send_mail()
         quit("Error: " + str(len(bank_coordinates)) + " bank icons detected")
 
     autopy.mouse.smooth_move(bank_coordinates[0][0] + ghouls_x_offset + randint(-2, 2),
@@ -78,4 +93,3 @@ def main():
         wait(10, "clicking ghouls")
         runs = runs + 1
 
-main()
