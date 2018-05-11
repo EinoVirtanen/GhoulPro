@@ -93,3 +93,4 @@ def main():
         wait(10, "clicking ghouls")
         runs = runs + 1
 
+main()
