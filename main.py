@@ -1,18 +1,25 @@
-bank_x_offset = 3
-bank_y_offset = 25
-ghouls_x_offset = 90
-ghouls_y_offset = 245
-canifis_x_offset = 50
-canifis_y_offset = 180
+bank_offset = (3, 25)
+ghouls_offset = (90, 245)
+canifis_offset = (-50, -180)
 xp_per_run = 4751175 - 4746545 
-runs = 0
 
 import smtplib
 import autopy
 from random import uniform, randint
 from time import sleep
+
+bank_coordinates = (0, 0)
 bank_icon = autopy.bitmap.Bitmap.open("bank_icon.png")
-bank_coordinates = []
+runs = 0
+
+def click(coordinates, offset, target):
+    coordinates = tuple(map(sum, zip(coordinates, offset)))
+    autopy.mouse.smooth_move(coordinates[0] + randint(-2, 2),
+                             coordinates[1] + randint(-2, 2))
+    wait(2, "clicking " + target)
+    autopy.mouse.toggle(autopy.mouse.Button.LEFT, True)
+    sleep(uniform(0.1, 0.2))
+    autopy.mouse.toggle(autopy.mouse.Button.LEFT, False)
 
 def send_mail():
     file_descriptor = open("credentials.txt", "r")
@@ -30,54 +37,40 @@ def wait(amount, reason):
     for i in range(amount):
         for a in range(1000):
             print " "
-        print "Sleeping for", amount-i, "until", reason
+        print "Sleeping for", amount - i, "until", reason
         sleep(1)
     sleep(uniform(0, 1))
 
-def click_bank():
-    screenshot = autopy.bitmap.capture_screen()
-    bank_coordinates = screenshot.find_every_bitmap(bank_icon)
 
-    if len(bank_coordinates) != 1:
+def find_bank():
+    screenshot = autopy.bitmap.capture_screen()
+    bank_coordinate_list = screenshot.find_every_bitmap(bank_icon)
+
+    if len(bank_coordinate_list) != 1:
         print "Successful runs", runs, "and about", runs * xp_per_run, "XP gained"
         send_mail()
-        quit("Error: " + str(len(bank_coordinates)) + " bank icons detected")
+        autopy.bitmap.capture_screen().save("fail.png")
+        quit("Error: " + str(len(bank_coordinate_list)) + " bank icons detected")
 
-    autopy.mouse.smooth_move(bank_coordinates[0][0] + bank_x_offset + randint(-2, 2),
-                             bank_coordinates[0][1] + bank_y_offset + randint(-2, 2))
-    wait(2, "clicking bank")
-    autopy.mouse.toggle(autopy.mouse.Button.LEFT, True)
-    sleep(uniform(0.1, 0.2))
-    autopy.mouse.toggle(autopy.mouse.Button.LEFT, False)
+    global bank_coordinates
+    bank_coordinates = (bank_coordinate_list[0][0], bank_coordinate_list[0][1])
+
+
+def click_bank():
+    find_bank()
+    click(bank_coordinates, bank_offset, "bank")
 
 def click_ghouls():
-    screenshot = autopy.bitmap.capture_screen()
-    global bank_coordinates
-    bank_coordinates = screenshot.find_every_bitmap(bank_icon)
-
-    if len(bank_coordinates) != 1:
-        print "Successful runs", runs, "and about", runs * xp_per_run, "XP gained"
-        send_mail()
-        quit("Error: " + str(len(bank_coordinates)) + " bank icons detected")
-
-    autopy.mouse.smooth_move(bank_coordinates[0][0] + ghouls_x_offset + randint(-2, 2),
-                             bank_coordinates[0][1] + ghouls_y_offset + randint(-2, 2))
-    wait(2, "clicking ghouls")
-    autopy.mouse.toggle(autopy.mouse.Button.LEFT, True)
-    sleep(uniform(0.1, 0.2))
-    autopy.mouse.toggle(autopy.mouse.Button.LEFT, False)
+    find_bank()
+    click(bank_coordinates, ghouls_offset, "ghouls")
 
 def click_canifis():
-    autopy.mouse.smooth_move(bank_coordinates[0][0] - canifis_x_offset + randint(-2, 2),
-                             bank_coordinates[0][1] - canifis_y_offset + randint(-2, 2))
-    wait(2, "clicking Canifis")
-    autopy.mouse.toggle(autopy.mouse.Button.LEFT, True)
-    sleep(uniform(0.1, 0.2))
-    autopy.mouse.toggle(autopy.mouse.Button.LEFT, False)
-
+    click(bank_coordinates, canifis_offset, "Canifis")
 
 def main():
+
     print "Do not use this in Jagex RuneScape. Usage violates the ToS/CoC/etc."
+    sleep(2)
 
     click_bank()
     wait(30, "clicking ghouls for the first time")
