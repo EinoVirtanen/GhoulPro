@@ -43,17 +43,20 @@ def wait(amount, reason):
 
 
 def find_bank():
-    screenshot = autopy.bitmap.capture_screen()
-    bank_coordinate_list = screenshot.find_every_bitmap(bank_icon)
+    for i in range(29):
+        screenshot = autopy.bitmap.capture_screen()
+        bank_coordinate_list = screenshot.find_every_bitmap(bank_icon)
+        if len(bank_coordinate_list) == 1:
+            global bank_coordinates
+            bank_coordinates = (bank_coordinate_list[0][0], bank_coordinate_list[0][1])
+            return
+        wait(10, "trying again to find the bank icon")
 
-    if len(bank_coordinate_list) != 1:
-        print "Successful runs", runs, "and about", runs * xp_per_run, "XP gained"
-        send_mail()
-        autopy.bitmap.capture_screen().save("fail.png")
-        quit("Error: " + str(len(bank_coordinate_list)) + " bank icons detected")
+    print "Successful runs", runs, "and about", runs * xp_per_run, "XP gained"
+    send_mail()
+    autopy.bitmap.capture_screen().save("fail.png")
+    quit("Error: " + str(len(bank_coordinate_list)) + " bank icons detected")
 
-    global bank_coordinates
-    bank_coordinates = (bank_coordinate_list[0][0], bank_coordinate_list[0][1])
 
 
 def click_bank():
